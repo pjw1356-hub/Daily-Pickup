@@ -37,6 +37,7 @@ def get_stocks_from_js():
         kospi_stocks = parse_stocks(kospi_match.group(1)) if kospi_match else []
         kosdaq_stocks = parse_stocks(kosdaq_match.group(1)) if kosdaq_match else []
         
+        print(f"KOSPI 종목 수: {len(kospi_stocks)}개, KOSDAQ 종목 수: {len(kosdaq_stocks)}개")
         return kospi_stocks, kosdaq_stocks
         
     except Exception as e:
@@ -44,16 +45,16 @@ def get_stocks_from_js():
         return [], []
 
 def make_message(kospi, kosdaq):
-    msg = "📊 **[Dayily Pickup] 오늘의 추천 종목** 📊\n\n"
+    msg = "📊 <b>[Dayily Pickup] 오늘의 추천 종목</b> 📊\n\n"
     
-    msg += "🔴 **KOSPI 추천 종목**\n"
+    msg += "🔴 <b>KOSPI 추천 종목</b>\n"
     if not kospi:
         msg += "- 종목을 가져오지 못했습니다.\n"
     for s in kospi:
         new_tag = " [🔥NEW]" if s['is_new'] else ""
         msg += f"- {s['name']} ({s['price']}){new_tag}\n"
         
-    msg += "\n🔵 **KOSDAQ 추천 종목**\n"
+    msg += "\n🔵 <b>KOSDAQ 추천 종목</b>\n"
     if not kosdaq:
         msg += "- 종목을 가져오지 못했습니다.\n"
     for s in kosdaq:
@@ -68,7 +69,7 @@ def send_message(text):
     payload = {
         "chat_id": int(CHAT_ID),
         "text": text,
-        "parse_mode": "Markdown"
+        "parse_mode": "HTML"
     }
     data = json.dumps(payload).encode("utf-8")
     
@@ -79,6 +80,8 @@ def send_message(text):
             print("🎉 추천 종목 전송 성공!")
     except Exception as e:
         print(f"❌ 전송 실패: {e}")
+        import sys
+        sys.exit(1)
 
 if __name__ == "__main__":
     print("추천 종목을 읽어오는 중...")
