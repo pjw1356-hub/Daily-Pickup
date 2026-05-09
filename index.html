@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dayily Pickup - 고신뢰도 주식 추천</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons (CDN) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="glow-bg"></div>
+    
+    <header>
+        <div class="container">
+            <div class="logo-area">
+                <h1>Dayily Pickup</h1>
+                <p class="subtitle">대한민국 주식 시장 기술적 분석 전문가</p>
+                <p class="date-display" id="current-date">로딩 중...</p>
+            </div>
+            <div class="status-badge">
+                <span class="pulse-icon"></span>
+                실시간 분석 가동 중
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- 알고리즘 소개 섹션 -->
+        <section class="algo-section glass">
+            <h2><i data-lucide="cpu"></i> 핵심 분석 알고리즘</h2>
+            <div class="algo-grid">
+                <div class="algo-card">
+                    <span class="num">01</span>
+                    <h3>기준봉 분석</h3>
+                    <p>240일 내 최대 거래량 돌파 및 안정화 확인</p>
+                </div>
+                <div class="algo-card">
+                    <span class="num">02</span>
+                    <h3>거래량 재돌파</h3>
+                    <p>30일 이내에 기준봉 거래량의 80% 이상 도달</p>
+                </div>
+                <div class="algo-card">
+                    <span class="num">03</span>
+                    <h3>이평선 수렴</h3>
+                    <p>5, 10, 20, 60일선이 ±3% 이내로 초수렴</p>
+                </div>
+                <div class="algo-card">
+                    <span class="num">04</span>
+                    <h3>돌파 임박</h3>
+                    <p>현재가가 5일선 위에서 마감 또는 돌파 시도</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 리포트 요약 섹션 -->
+        <section class="summary-section">
+            <div class="section-title">
+                <h2><i data-lucide="bar-chart-2"></i> 오늘의 추천 종목</h2>
+                <p>엄격한 기술적 지표를 통과한 최적의 종목입니다. (각 9종목 제공)</p>
+            </div>
+            
+            <div class="controls-wrapper">
+                <div class="tabs">
+                    <button class="tab-btn active" data-target="kospi">KOSPI</button>
+                    <button class="tab-btn" data-target="kosdaq">KOSDAQ</button>
+                </div>
+                
+                <div class="pagination" id="page-nav">
+                    <button class="page-btn active" data-page="1">1번 (3종목)</button>
+                    <button class="page-btn" data-page="2">2번 (3종목)</button>
+                    <button class="page-btn" data-page="3">3번 (3종목)</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 종목 리스트 섹션 -->
+        <section class="stock-section">
+            <div id="kospi-list" class="stock-grid active">
+                <!-- JS에서 동적으로 생성됩니다. -->
+                <div class="loading">종목 데이터를 분석 중입니다...</div>
+            </div>
+            <div id="kosdaq-list" class="stock-grid">
+                <!-- JS에서 동적으로 생성됩니다. -->
+                <div class="loading">종목 데이터를 분석 중입니다...</div>
+            </div>
+        </section>
+
+        <!-- 리스크 관리 안내 -->
+        <section class="risk-notice glass">
+            <h3><i data-lucide="shield-alert"></i> 리스크 관리 및 제외 기준</h3>
+            <p>Dayily Pickup은 안정성을 위해 관리종목, 거래정지, 우선주, 시가총액 300억 미만, 최근 거래대금 100억 미만 종목은 분석 대상에서 즉시 제외합니다.</p>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Dayily Pickup. All Rights Reserved. 본 자료는 투자 참고용이며, 최종 투자 판단의 책임은 본인에게 있습니다.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        // Lucide 아이콘 초기화
+        lucide.createIcons();
+    </script>
+</body>
+</html>

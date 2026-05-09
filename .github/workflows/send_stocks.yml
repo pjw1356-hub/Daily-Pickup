@@ -1,0 +1,28 @@
+name: Send Daily Stock Recommendations
+
+on:
+  schedule:
+    # 🔴 중요: GitHub Actions는 UTC 기준입니다.
+    # 한국 시간(KST) 아침 8:00는 UTC 기준 밤 11:00 (23:00)입니다.
+    # 월~금 아침에 받으려면 일~목 밤에 실행해야 합니다.
+    - cron: '0 23 * * 0-4'
+  workflow_dispatch: # 깃허브 웹사이트에서 수동으로 실행해볼 수 있는 버튼 생성
+
+jobs:
+  send-stocks:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 저장소 코드 가져오기
+      uses: actions/checkout@v3
+
+    - name: 파이썬 설치
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: 스크립트 실행
+      env:
+        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      run: python send_stocks.py
