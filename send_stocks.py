@@ -5,8 +5,8 @@ import re
 import os
 
 # 봇 토큰과 Chat ID (깃허브 비밀금고에서 읽어오되, 없으면 기본값 사용!)
-TOKEN = os.environ.get("TELEGRAM_TOKEN", "8737498988:AAFOAzVzqjUOM4hqn6Juzbc5CdQTyasqw6o")
-CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "6552955887")
+TOKEN = os.environ.get("TELEGRAM_TOKEN") or "8737498988:AAFOAzVzqjUOM4hqn6Juzbc5CdQTyasqw6o"
+CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID") or "6552955887"
 
 def get_stocks_from_js():
     """app.js 파일에서 종목 정보를 쏙쏙 뽑아오는 함수입니다."""
