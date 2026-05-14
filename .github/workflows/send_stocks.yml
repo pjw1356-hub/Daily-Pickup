@@ -3,9 +3,9 @@ name: Send Daily Stock Recommendations
 on:
   schedule:
     # 🔴 중요: GitHub Actions는 UTC 기준입니다.
-    # 한국 시간(KST) 아침 8:00는 UTC 기준 밤 11:00 (23:00)입니다.
+    # 한국 시간(KST) 오전 7:00는 UTC 기준 전날 밤 10:00 (22:00)입니다.
     # 월~금 아침에 받으려면 일~목 밤에 실행해야 합니다.
-    - cron: '0 23 * * 0-4'
+    - cron: '0 22 * * 0-4'
   workflow_dispatch: # 깃허브 웹사이트에서 수동으로 실행해볼 수 있는 버튼 생성
 
 jobs:
@@ -20,6 +20,10 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
+
+    - name: 필수 라이브러리 설치
+      run: |
+        pip install requests beautifulsoup4
 
     - name: 스크립트 실행
       env:

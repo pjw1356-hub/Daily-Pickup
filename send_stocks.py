@@ -1,96 +1,112 @@
-import urllib.request
-import urllib.parse
-import json
-import re
 import os
+import json
+import requests
+from bs4 import BeautifulSoup
+import datetime
 
-# 봇 토큰과 Chat ID (깃허브 비밀금고에서 읽어오되, 없으면 기본값 사용!)
-# 깃허브 시크릿이 잘못되었을 수 있으니, 작동이 확인된 값으로 강제 설정합니다!
-TOKEN = "8737498988:AAFOAzVzqjUOM4hqn6Juzbc5CdQTyasqw6o"
-CHAT_ID = "6552955887"
+# 봇 토큰과 Chat ID
+TOKEN = os.environ.get("TELEGRAM_TOKEN") or ""
+CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID") or ""
 
-def get_stocks_from_js():
-    """app.js 파일에서 종목 정보를 쏙쏙 뽑아오는 함수입니다."""
-    try:
-        file_path = os.path.join(os.path.dirname(__file__), 'app.js')
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
+def get_realtime_stocks():
+    """네이버 금융에서 실시간 거래량 상위 종목을 가져옵니다."""
+    stocks = {"KOSPI": [], "KOSDAQ": []}
+    
+    # 0: KOSPI, 1: KOSDAQ
+    for sosok in [0, 1]:
+        market_type = "KOSPI" if sosok == 0 else "KOSDAQ"
+        url = f"https://finance.naver.com/sise/sise_quant.naver?sosok={sosok}"
+        
+        try:
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            response = requests.get(url, headers=headers)
+            soup = BeautifulSoup(response.text, 'html.parser')
             
-        kospi_match = re.search(r'const kospiData\s*=\s*\[(.*?)\];', content, re.DOTALL)
-        kosdaq_match = re.search(r'const kosdaqData\s*=\s*\[(.*?)\];', content, re.DOTALL)
-        
-        def parse_stocks(text):
-            stocks = []
-            items = re.findall(r'\{(.*?)\}', text, re.DOTALL)
-            for item in items:
-                name = re.search(r'name:\s*"(.*?)"', item)
-                price = re.search(r'price:\s*"(.*?)"', item)
-                is_new = "isNew: true" in item
+            # 종목 테이블 찾기
+            table = soup.find('table', {'class': 'type_2'})
+            rows = table.find_all('tr')
+            
+            count = 0
+            for row in rows:
+                cols = row.find_all('td')
+                if len(cols) < 5: continue
                 
-                if name and price:
-                    stocks.append({
-                        "name": name.group(1),
-                        "price": price.group(1),
-                        "is_new": is_new
+                name_tag = cols[1].find('a')
+                if name_tag:
+                    name = name_tag.text.strip()
+                    price = cols[2].text.strip()
+                    change = cols[3].text.strip().replace('\n', '').replace('\t', '')
+                    up_down = cols[3].find('img')
+                    
+                    # 상승/하락 기호 표시
+                    prefix = ""
+                    if up_down:
+                        if 'up' in up_down.get('src', ''): prefix = "🔺"
+                        elif 'down' in up_down.get('src', ''): prefix = "🔻"
+                    
+                    stocks[market_type].append({
+                        "name": name,
+                        "price": price,
+                        "change": f"{prefix}{change}"
                     })
-            return stocks
-
-        kospi_stocks = parse_stocks(kospi_match.group(1)) if kospi_match else []
-        kosdaq_stocks = parse_stocks(kosdaq_match.group(1)) if kosdaq_match else []
-        
-        print(f"KOSPI 종목 수: {len(kospi_stocks)}개, KOSDAQ 종목 수: {len(kosdaq_stocks)}개")
-        return kospi_stocks, kosdaq_stocks
-        
-    except Exception as e:
-        print(f"파일을 읽는 중 에러가 발생했습니다: {e}")
-        return [], []
+                    count += 1
+                    if count >= 10: break # 상위 10개만
+                    
+        except Exception as e:
+            print(f"{market_type} 데이터를 가져오는 중 에러 발생: {e}")
+            
+    return stocks["KOSPI"], stocks["KOSDAQ"]
 
 def make_message(kospi, kosdaq):
-    msg = "📊 <b>[Dayily Pickup] 오늘의 추천 종목</b> 📊\n\n"
+    now = datetime.datetime.now() + datetime.timedelta(hours=9) # KST 기준
+    date_str = now.strftime("%Y년 %m월 %d일 %H:%M")
     
-    msg += "🔴 <b>KOSPI 추천 종목</b>\n"
+    msg = f"🚀 <b>[Dayily Pickup] 실시간 주식 보고</b> 🚀\n"
+    msg += f"📅 일시: {date_str}\n\n"
+    
+    msg += "🔴 <b>KOSPI 거래량 상위</b>\n"
     if not kospi:
-        msg += "- 종목을 가져오지 못했습니다.\n"
+        msg += "- 데이터를 가져오지 못했습니다.\n"
     for s in kospi:
-        new_tag = " [🔥NEW]" if s['is_new'] else ""
-        msg += f"- {s['name']} ({s['price']}){new_tag}\n"
+        msg += f"- {s['name']}: {s['price']}원 ({s['change']})\n"
         
-    msg += "\n🔵 <b>KOSDAQ 추천 종목</b>\n"
+    msg += "\n🔵 <b>KOSDAQ 거래량 상위</b>\n"
     if not kosdaq:
-        msg += "- 종목을 가져오지 못했습니다.\n"
+        msg += "- 데이터를 가져오지 못했습니다.\n"
     for s in kosdaq:
-        new_tag = " [🔥NEW]" if s['is_new'] else ""
-        msg += f"- {s['name']} ({s['price']}){new_tag}\n"
+        msg += f"- {s['name']}: {s['price']}원 ({s['change']})\n"
         
-    msg += "\n🚀 오늘도 성공 투자 하세요! 🚀"
+    msg += "\n✨ 실시간 거래량 기반 추천입니다.\n성공 투자를 기원합니다! 💰"
     return msg
 
 def send_message(text):
+    if not TOKEN or not CHAT_ID:
+        print("❌ 에러: TELEGRAM_TOKEN 또는 TELEGRAM_CHAT_ID가 설정되지 않았습니다.")
+        return
+
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     payload = {
-        "chat_id": int(CHAT_ID),
+        "chat_id": CHAT_ID,
         "text": text,
         "parse_mode": "HTML"
     }
-    data = json.dumps(payload).encode("utf-8")
     
     try:
-        req = urllib.request.Request(url, data=data)
-        req.add_header('Content-Type', 'application/json; charset=utf-8')
-        with urllib.request.urlopen(req) as response:
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
             print("🎉 추천 종목 전송 성공!")
+        else:
+            print(f"❌ 전송 실패: {response.status_code} {response.text}")
     except Exception as e:
-        print(f"❌ 전송 실패: {e}")
-        import sys
-        sys.exit(1)
+        print(f"❌ 에러 발생: {e}")
 
 if __name__ == "__main__":
-    print("추천 종목을 읽어오는 중...")
-    kospi, kosdaq = get_stocks_from_js()
+    print("실시간 주식 데이터를 가져오는 중...")
+    kospi, kosdaq = get_realtime_stocks()
     
     if kospi or kosdaq:
         message = make_message(kospi, kosdaq)
         print("메시지를 전송합니다...")
         send_message(message)
     else:
-        print("❌ 전송할 종목이 없습니다.")
+        print("❌ 전송할 데이터가 없습니다.")

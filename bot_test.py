@@ -40,3 +40,4 @@ def send_message():
 if __name__ == "__main__":
     print("봇을 실행합니다...")
     send_message()
+
