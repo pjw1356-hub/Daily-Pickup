@@ -3,6 +3,7 @@ import json
 import requests
 from bs4 import BeautifulSoup
 import datetime
+import sys
 
 # 봇 토큰과 Chat ID
 TOKEN = os.environ.get("TELEGRAM_TOKEN") or ""
@@ -82,7 +83,7 @@ def make_message(kospi, kosdaq):
 def send_message(text):
     if not TOKEN or not CHAT_ID:
         print("❌ 에러: TELEGRAM_TOKEN 또는 TELEGRAM_CHAT_ID가 설정되지 않았습니다.")
-        return
+        sys.exit(1)
 
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     payload = {
@@ -97,8 +98,10 @@ def send_message(text):
             print("🎉 추천 종목 전송 성공!")
         else:
             print(f"❌ 전송 실패: {response.status_code} {response.text}")
+            sys.exit(1)
     except Exception as e:
         print(f"❌ 에러 발생: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     print("실시간 주식 데이터를 가져오는 중...")
